@@ -5,11 +5,12 @@ import { User } from "@/server/db/models/User";
 export async function requireAdmin() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id) {
+  const sessionUser = session?.user as any;
+  if (!sessionUser?.id) {
     throw new Error("Not authenticated");
   }
 
-  const user = await User.findById(session.user.id)
+  const user = await User.findById(sessionUser.id)
     .select("role isAdmin")
     .lean();
 
@@ -19,5 +20,5 @@ export async function requireAdmin() {
     throw new Error("Forbidden");
   }
 
-  return { userId: session.user.id as string };
+  return { userId: sessionUser.id as string };
 }

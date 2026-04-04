@@ -6,15 +6,16 @@ import { AdvertiserProfile } from "@/server/db/models/AdvertiserProfile";
 export async function requireAdvertiser() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id) {
+  const sessionUser = session?.user as any;
+  if (!sessionUser?.id) {
     throw new Error("Not authenticated");
   }
 
-  if (session.user.role !== "advertiser") {
+  if (sessionUser.role !== "advertiser") {
     throw new Error("Access denied: advertiser role required");
   }
 
-  const userId = session.user.id;
+  const userId = sessionUser.id;
 
   const advertiser = await AdvertiserProfile.findOne({ user: userId });
 

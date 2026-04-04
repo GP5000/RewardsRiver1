@@ -6,11 +6,12 @@ import { PublisherProfile } from "@/server/db/models/PublisherProfile";
 export async function requirePublisher() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id) {
+  const sessionUser = session?.user as any;
+  if (!sessionUser?.id) {
     throw new Error("Not authenticated");
   }
 
-  const userId = session.user.id;
+  const userId = sessionUser.id;
 
   // Always find the publisher profile by user
   const publisher = await PublisherProfile.findOne({ user: userId });
