@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>RewardsRiver Modal Test</title>
+    <style>
+      body {
+        margin: 0;
+        background: #020617;
+        color: #e5e7eb;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 20px;
+      }
+
+      /* Button */
+      #rr-open {
+        padding: 12px 22px;
+        border-radius: 999px;
+        border: 0;
+        background: linear-gradient(135deg, #2563eb, #38bdf8);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 15px;
+        transition: 0.18s ease;
+      }
+      #rr-open:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
+      }
+
+      /* Modal Overlay */
+      #rr-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: rr-fade-in 0.25s ease;
+      }
+
+      @keyframes rr-fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* Modal Box */
+      #rr-modal-inner {
+        width: min(1000px, 100% - 32px);
+        height: min(720px, 100% - 32px);
+        background: #020617;
+        border-radius: 22px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.85);
+        transform: translateY(20px);
+        opacity: 0;
+        animation: rr-slide-up 0.28s ease forwards;
+      }
+
+      @keyframes rr-slide-up {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Close button */
+      #rr-close {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        background: rgba(15, 23, 42, 0.92);
+        color: #e5e7eb;
+        border-radius: 999px;
+        border: 0;
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: 0.18s ease;
+      }
+
+      #rr-close:hover {
+        background: rgba(30, 41, 59, 0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      }
+
+      /* Iframe */
+      #rr-iframe {
+        border: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>RewardsRiver Modal Wall Test</h1>
+
+    <button id="rr-open">Open RewardsRiver Offers</button>
+
+    <div id="rr-modal">
+      <div id="rr-modal-inner">
+        <button id="rr-close">✕</button>
+
+        <iframe
+          id="rr-iframe"
+          src="http://localhost:3000/wall?placement_id=YOUR_PLACEMENT_ID&sub_id=testuser-modal"
+          sandbox="allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const openBtn = document.getElementById("rr-open");
+        const closeBtn = document.getElementById("rr-close");
+        const modal = document.getElementById("rr-modal");
+        const iframe = document.getElementById("rr-iframe");
+
+        openBtn.addEventListener("click", () => {
+          modal.style.display = "flex";
+          document.body.style.overflow = "hidden";
+        });
+
+        function closeModal() {
+          modal.style.display = "none";
+          document.body.style.overflow = "";
+        }
+
+        closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) closeModal();
+        });
+
+        /* ----------------------------
+           Auto-resize iframe height
+        ---------------------------- */
+        window.addEventListener("message", (event) => {
+          if (!event.data || typeof event.data !== "object") return;
+
+          if (event.data.type === "rewardsriver:wall-height") {
+            const newHeight = event.data.height;
+            if (typeof newHeight === "number" && newHeight > 200) {
+              iframe.style.height = newHeight + "px";
+            }
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

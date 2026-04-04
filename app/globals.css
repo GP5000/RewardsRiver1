@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
+/* ─── RewardsRiver design tokens ─── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --rr-primary: #0EA5E9;      /* sky-500 */
+  --rr-accent: #06B6D4;       /* cyan-500 */
+  --rr-bg: #0C1220;           /* dark navy */
+  --rr-border: rgba(14,165,233,0.2);
+
+  --background: #0C1220;
+  --foreground: #e2e8f0;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 @theme inline {
@@ -12,15 +21,37 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Wave animation — applied only to decorative SVG elements ─── */
+@keyframes wave-slow {
+  0%, 100% { transform: translateX(0) scaleY(1); }
+  50% { transform: translateX(-2%) scaleY(0.97); }
+}
+
+@keyframes river-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-wave-slow {
+  animation: wave-slow 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-river-in {
+  animation: river-in 0.4s ease-out both;
+}
+
+/* ─── Reusable glass card ─── */
+.rr-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--rr-border);
+  border-radius: 1rem;
 }

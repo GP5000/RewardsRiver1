@@ -1,0 +1,30 @@
+[
+  {
+    "_comment": "CPAGrip offer template — copy this block per offer.",
+    "_instructions": [
+      "1. Sign up at cpagrip.com as a publisher",
+      "2. Go to Offer Tools → Offer Links and find your offers",
+      "3. For each offer, copy the offer URL and replace YOUR_USER_ID and OFFER_ID below",
+      "4. Set your postback URL in CPAGrip dashboard to:",
+      "   https://moonmiloes.io/api/postback?click_id={subid1}&amount={payout}&secret=YOUR_RR_CONVERT_SECRET",
+      "   (CPAGrip uses {subid1} for your custom tracking parameter)",
+      "5. The click_id you send as subid1 will come back in {subid1} in the postback",
+      "6. Run: npx ts-node -r tsconfig-paths/register scripts/import-offers.ts --file offers/cpagrip.json"
+    ],
+    "name": "CPAGrip Offer Name Here",
+    "title": "Display Title Shown to Users",
+    "description": "Short description of what the user needs to do.",
+    "network": "cpagrip",
+    "externalOfferId": "CPAGRIP_OFFER_ID",
+    "redirectUrl": "https://www.cpagrip.com/show.php?l=0&u=YOUR_USER_ID&id=CPAGRIP_OFFER_ID&s1={click_id}",
+    "payoutUsd": 0.00,
+    "advertiserPayoutUsd": 0.00,
+    "estimatedMinutes": 5,
+    "category": "Survey",
+    "badge": null,
+    "geoAllow": ["US"],
+    "deviceTarget": "all",
+    "platforms": ["web"],
+    "status": "active"
+  }
+]
