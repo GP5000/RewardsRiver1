@@ -1,35 +1,66 @@
 /**
  * lib/logger.ts
- * Structured logging via pino. In development uses pino-pretty for readability.
- * In production emits JSON (one object per line) for log aggregators.
+ * Lightweight structured logger compatible with Next.js / Vercel serverless.
+ * Emits JSON lines in production, pretty-prints in development.
+ * Same API as the pino child loggers it replaces — no call-site changes needed.
  *
  * IMPORTANT: Never log full postback URLs (may contain advertiser secrets).
  * Log only the hostname and status. Never log API keys.
  */
 
-import pino from "pino";
-
 const isDev = process.env.NODE_ENV !== "production";
+const level = process.env.LOG_LEVEL ?? "info";
 
-const baseLogger = pino(
-  {
-    level: process.env.LOG_LEVEL ?? "info",
-    base: { service: "rewardsriver" },
-    timestamp: pino.stdTimeFunctions.isoTime,
-  },
-  isDev
-    ? pino.transport({
-        target: "pino-pretty",
-        options: { colorize: true, translateTime: "SYS:HH:MM:ss", ignore: "pid,hostname" },
-      })
-    : undefined
-);
+const LEVELS = { debug: 0, info: 1, warn: 2, error: 3 } as const;
+type Level = keyof typeof LEVELS;
 
-// Child loggers scoped per domain
-export const clickLogger = baseLogger.child({ domain: "click" });
-export const conversionLogger = baseLogger.child({ domain: "conversion" });
-export const postbackLogger = baseLogger.child({ domain: "postback" });
-export const fraudLogger = baseLogger.child({ domain: "fraud" });
-export const authLogger = baseLogger.child({ domain: "auth" });
+function shouldLog(l: Level): boolean {
+  return LEVELS[l] >= LEVELS[(level as Level) ?? "info"];
+}
+
+function format(domain: string, l: Level, obj: Record<string, any>, msg?: string): string {
+  if (isDev) {
+    const parts = [`[${l.toUpperCase()}]`, `[${domain}]`];
+    if (msg) parts.push(msg);
+    const extra = Object.keys(obj).length ? JSON.stringify(obj) : "";
+    return parts.join(" ") + (extra ? " " + extra : "");
+  }
+  return JSON.stringify({
+    level: l,
+    service: "rewardsriver",
+    domain,
+    ts: new Date().toISOString(),
+    ...obj,
+    msg,
+  });
+}
+
+function makeLogger(domain: string) {
+  return {
+    debug(obj: Record<string, any>, msg?: string) {
+      if (shouldLog("debug")) console.debug(format(domain, "debug", obj, msg));
+    },
+    info(obj: Record<string, any>, msg?: string) {
+      if (shouldLog("info")) console.info(format(domain, "info", obj, msg));
+    },
+    warn(obj: Record<string, any>, msg?: string) {
+      if (shouldLog("warn")) console.warn(format(domain, "warn", obj, msg));
+    },
+    error(obj: Record<string, any>, msg?: string) {
+      if (shouldLog("error")) console.error(format(domain, "error", obj, msg));
+    },
+    child(bindings: Record<string, any>) {
+      return makeLogger(bindings.domain ?? domain);
+    },
+  };
+}
+
+const baseLogger = makeLogger("app");
+
+export const clickLogger = makeLogger("click");
+export const conversionLogger = makeLogger("conversion");
+export const postbackLogger = makeLogger("postback");
+export const fraudLogger = makeLogger("fraud");
+export const authLogger = makeLogger("auth");
 
 export default baseLogger;
