@@ -15,6 +15,7 @@ type PlacementItem = {
   url: string | null;
   primaryGeo: string;
   notes?: string | null;
+  marginPercent: number;
   active: boolean;
   createdAt: string | null;
   updatedAt: string | null;
@@ -70,6 +71,40 @@ const PlacementsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [copyToast, setCopyToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Per-row margin editing: keyed by placement id
+  const [marginEdits, setMarginEdits] = useState<Record<string, string>>({});
+  const [marginSaving, setMarginSaving] = useState<Record<string, boolean>>({});
+  const [marginSaved, setMarginSaved] = useState<Record<string, boolean>>({});
+
+  function getMarginInput(id: string, fallback: number) {
+    return id in marginEdits ? marginEdits[id] : String(fallback ?? 0);
+  }
+
+  async function saveMargin(id: string) {
+    const raw = marginEdits[id];
+    const val = parseFloat(raw ?? "0");
+    if (isNaN(val) || val < 0 || val > 100) return;
+    setMarginSaving((s) => ({ ...s, [id]: true }));
+    try {
+      const res = await fetch(`/api/publisher/placements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marginPercent: val }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) throw new Error(data.error || "Failed");
+      setPlacements((prev) =>
+        prev.map((p) => p.id === id ? { ...p, marginPercent: data.placement.marginPercent } : p)
+      );
+      setMarginSaved((s) => ({ ...s, [id]: true }));
+      setTimeout(() => setMarginSaved((s) => ({ ...s, [id]: false })), 2500);
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setMarginSaving((s) => ({ ...s, [id]: false }));
+    }
+  }
 
   // Load placements once
   useEffect(() => {
@@ -328,6 +363,7 @@ const PlacementsPage: React.FC = () => {
                     <th className="px-3 py-2">Placement</th>
                     <th className="px-3 py-2">App / Site</th>
                     <th className="px-3 py-2">GEO</th>
+                    <th className="px-3 py-2">Margin</th>
                     <th className="px-3 py-2">Created</th>
                     <th className="px-3 py-2 text-right">Wall URL</th>
                   </tr>
@@ -381,6 +417,39 @@ const PlacementsPage: React.FC = () => {
 
                         <td className="px-3 py-3 align-middle text-gray-200">
                           {p.primaryGeo || "GLOBAL"}
+                        </td>
+
+                        <td className="px-3 py-3 align-middle">
+                          <div className="flex items-center gap-1.5">
+                            <div className="relative w-20">
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={getMarginInput(p.id, p.marginPercent)}
+                                onChange={(e) =>
+                                  setMarginEdits((prev) => ({ ...prev, [p.id]: e.target.value }))
+                                }
+                                onKeyDown={(e) => e.key === "Enter" && saveMargin(p.id)}
+                                className="w-full rounded border border-white/10 bg-slate-900 px-2 py-1 pr-5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">%</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => saveMargin(p.id)}
+                              disabled={marginSaving[p.id]}
+                              className="rounded border border-white/10 bg-slate-800 px-2 py-1 text-[10px] font-medium text-gray-200 hover:bg-slate-700 disabled:opacity-40"
+                            >
+                              {marginSaving[p.id] ? "…" : marginSaved[p.id] ? "✓" : "Save"}
+                            </button>
+                          </div>
+                          {parseFloat(getMarginInput(p.id, p.marginPercent)) > 0 && (
+                            <div className="mt-1 text-[10px] text-gray-500">
+                              $100 offer → user sees ${(100 * (1 - parseFloat(getMarginInput(p.id, p.marginPercent)) / 100)).toFixed(2)}
+                            </div>
+                          )}
                         </td>
 
                         <td className="px-3 py-3 align-middle text-gray-200">
