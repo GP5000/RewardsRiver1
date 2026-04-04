@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import {
   useRouter,
   useSearchParams,
@@ -38,7 +40,7 @@ type PlacementStats = {
 
 type DayOption = 7 | 30 | 90;
 
-export default function PlacementDetailPage() {
+function PlacementDetailPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -455,5 +457,13 @@ export default function PlacementDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PlacementDetailPage() {
+  return (
+    <Suspense>
+      <PlacementDetailPageInner />
+    </Suspense>
   );
 }

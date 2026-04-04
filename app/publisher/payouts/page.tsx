@@ -4,7 +4,7 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -124,7 +124,7 @@ function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
 
 /* ───────── Page ───────── */
 
-const PublisherPayoutsPage: React.FC = () => {
+const PublisherPayoutsPageInner: React.FC = () => {
  const searchParams = useSearchParams();
 const publisherId = searchParams.get("publisherId");
 
@@ -588,4 +588,10 @@ const [loading, setLoading] = useState(false);
   );
 };
 
-export default PublisherPayoutsPage;
+export default function PublisherPayoutsPage() {
+  return (
+    <Suspense>
+      <PublisherPayoutsPageInner />
+    </Suspense>
+  );
+}

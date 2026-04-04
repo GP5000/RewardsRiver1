@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Globe2,
@@ -144,7 +144,7 @@ function OfferDetailsModal({ offer, onClose }: OfferModalProps) {
    Page
    ───────────────────────────────────────────────────────────── */
 
-export default function OffersExplorerPage() {
+function OffersExplorerPageInner() {
   const searchParams = useSearchParams();
   const publisherId = searchParams.get("publisherId");
 
@@ -334,5 +334,13 @@ export default function OffersExplorerPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function OffersExplorerPage() {
+  return (
+    <Suspense>
+      <OffersExplorerPageInner />
+    </Suspense>
   );
 }

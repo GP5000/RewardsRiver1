@@ -4,7 +4,7 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle, Clock, XCircle } from "lucide-react";
 
@@ -263,7 +263,7 @@ function NoSubIdNotice() {
 
 /* ─── Main page ─── */
 
-const WallPage: React.FC = () => {
+const WallPageInner: React.FC = () => {
   const searchParams = useSearchParams();
 
   const [wall, setWall] = useState<WallResponse | null>(null);
@@ -619,4 +619,10 @@ const WallPage: React.FC = () => {
   );
 };
 
-export default WallPage;
+export default function WallPage() {
+  return (
+    <Suspense>
+      <WallPageInner />
+    </Suspense>
+  );
+}

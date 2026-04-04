@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Copy, Loader2, Radio, Zap } from "lucide-react";
 
@@ -44,7 +46,7 @@ function CodeBlock({
   );
 }
 
-export default function PostbackTesterPage() {
+function PostbackTesterPageInner() {
   const searchParams = useSearchParams();
   const detectedPid = searchParams.get("publisherId") || "";
   const detectedPlacement = searchParams.get("placement_id") || "";
@@ -383,5 +385,13 @@ export default function PostbackTesterPage() {
         completes an offer.
       </p>
     </div>
+  );
+}
+
+export default function PostbackTesterPage() {
+  return (
+    <Suspense>
+      <PostbackTesterPageInner />
+    </Suspense>
   );
 }

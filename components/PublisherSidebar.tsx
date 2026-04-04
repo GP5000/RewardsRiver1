@@ -16,7 +16,7 @@ import {
   LogOut,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signOut } from "next-auth/react";
 
 type NavItem = {
@@ -26,7 +26,7 @@ type NavItem = {
   activeMatch: string; // path part used for active state
 };
 
-export default function PublisherSidebar() {
+function PublisherSidebarInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -189,5 +189,13 @@ export default function PublisherSidebar() {
         </div>
       </aside>
     </>
+  );
+}
+
+export default function PublisherSidebar() {
+  return (
+    <Suspense fallback={null}>
+      <PublisherSidebarInner />
+    </Suspense>
   );
 }

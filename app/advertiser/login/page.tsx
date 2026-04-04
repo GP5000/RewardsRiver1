@@ -1,11 +1,12 @@
 "use client";
+export const dynamic = "force-dynamic";
+import { Suspense, useState, FormEvent } from "react";
 
-import { useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function AdvertiserLoginPage() {
+function AdvertiserLoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/advertiser/dashboard";
@@ -107,5 +108,13 @@ export default function AdvertiserLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdvertiserLoginPage() {
+  return (
+    <Suspense>
+      <AdvertiserLoginPageInner />
+    </Suspense>
   );
 }

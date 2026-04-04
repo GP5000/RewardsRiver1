@@ -1,11 +1,12 @@
 "use client";
+export const dynamic = "force-dynamic";
+import { Suspense, useState, FormEvent } from "react";
 
-import { useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function PublisherLoginPage() {
+function PublisherLoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -149,5 +150,13 @@ export default function PublisherLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PublisherLoginPage() {
+  return (
+    <Suspense>
+      <PublisherLoginPageInner />
+    </Suspense>
   );
 }
