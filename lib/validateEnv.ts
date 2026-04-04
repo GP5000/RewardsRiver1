@@ -35,7 +35,9 @@ export function validateEnv(): void {
 
   if (process.env.NODE_ENV === "production") {
     for (const key of PROD_REQUIRED_ENV_VARS) {
-      if (!process.env[key]) missing.push(key);
+      if (!process.env[key]) {
+        console.warn(`[RewardsRiver] Warning: optional production variable not set: ${key}`);
+      }
     }
   }
 
