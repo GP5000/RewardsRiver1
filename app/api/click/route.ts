@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
 
     // Generate unique click ID for postback matching
     const clickId = crypto.randomUUID();
-    const country = lookupCountry(ip);
+    const country = lookupCountry(ip, req.headers);
     const device = req.headers.get("x-device") || undefined;
     const platform = req.headers.get("x-platform") || undefined;
 

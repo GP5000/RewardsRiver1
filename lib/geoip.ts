@@ -1,23 +1,34 @@
 /**
  * lib/geoip.ts
- * Thin wrapper around geoip-lite for IP → country lookups.
- * The geoip-lite database is bundled with the package and updated via
- * the postinstall script: node -e "require('geoip-lite').reloadDataSync()"
+ * Country lookup using Vercel/Cloudflare edge geo headers.
+ * No binary database files — works in all serverless environments.
+ *
+ * Pass the NextRequest headers to lookupCountry for the most accurate result.
+ * Falls back to null if no geo header is present.
  */
 
-// geoip-lite has no official TS types; require is fine here
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const geoip = require("geoip-lite");
+import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 
 /**
- * Returns the ISO 3166-1 alpha-2 country code for an IP address,
- * or null if the IP is invalid, private, or not found.
+ * Returns the ISO 3166-1 alpha-2 country code from edge headers,
+ * or null if unavailable.
+ *
+ * Checks (in order):
+ *   x-vercel-ip-country  — set by Vercel Edge Network
+ *   cf-ipcountry         — set by Cloudflare
+ *   x-geo-country        — generic fallback some proxies set
  */
-export function lookupCountry(ip: string | null | undefined): string | null {
-  if (!ip) return null;
+export function lookupCountry(
+  _ip: string | null | undefined,
+  headers?: ReadonlyHeaders | Headers | null
+): string | null {
+  if (!headers) return null;
   try {
-    const geo = geoip.lookup(ip);
-    return geo?.country ?? null;
+    const country =
+      headers.get("x-vercel-ip-country") ??
+      headers.get("cf-ipcountry") ??
+      headers.get("x-geo-country");
+    return country && country !== "XX" ? country.toUpperCase() : null;
   } catch {
     return null;
   }
