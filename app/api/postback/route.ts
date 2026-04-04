@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/server/db/connect";
 import { OfferClick } from "@/server/db/models/OfferClick";
+import { Placement } from "@/server/db/models/Placement";
 import { OfferConversion } from "@/server/db/models/OfferConversion";
 import { Offer } from "@/server/db/models/Offer";
 import { Campaign } from "@/server/db/models/Campaign";
@@ -78,7 +79,7 @@ async function handlePostback(req: NextRequest): Promise<NextResponse> {
     }
 
     // Look up click — return 200 if not found (network expects 200)
-    const click = await OfferClick.findOne({ clickId }).lean();
+    const click = await OfferClick.findOne({ clickId }).lean() as any;
     if (!click) {
       postbackLogger.info({ traceId, clickId }, "Postback: unknown click_id");
       return new NextResponse("OK", { status: 200 });
@@ -149,6 +150,13 @@ async function handlePostback(req: NextRequest): Promise<NextResponse> {
       ? campaign.payoutPerConversionCents / 100
       : amount;
 
+    // Look up placement margin to calculate what the user actually gets credited
+    const placement = await Placement.findById(click.placement).select("marginPercent").lean() as any;
+    const marginPercent: number = placement?.marginPercent ?? 0;
+    const userPayoutUsd = marginPercent > 0
+      ? Math.round(publisherPayoutUsd * (1 - marginPercent / 100) * 100) / 100
+      : publisherPayoutUsd;
+
     const publisherPayoutCents = Math.round(publisherPayoutUsd * 100);
     const advertiserPayoutCents = Math.round(advertiserPayoutUsd * 100);
 
@@ -197,6 +205,7 @@ async function handlePostback(req: NextRequest): Promise<NextResponse> {
             clickId,
             subId: click.subId,
             payoutUsd: publisherPayoutUsd,
+            userPayoutUsd,
             advertiserPayoutUsd,
             conversionStatus: "pending",
             conversionIp: ip,

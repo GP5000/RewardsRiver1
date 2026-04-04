@@ -34,6 +34,10 @@ export interface IPlacement extends Document {
   // IP-level click rate limit override (max clicks/min per IP, 0 = use global default of 30)
   rateLimit?: number;
 
+  // Publisher margin: percentage kept by publisher on top of user payout.
+  // e.g. marginPercent=20 on a $100 offer → user sees $80, publisher earns $100.
+  marginPercent: number;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,6 +100,7 @@ const PlacementSchema = new Schema<IPlacement>(
     revenueUsd: { type: Number, default: 0 },
     epcUsd: { type: Number, default: 0 },
     rateLimit: { type: Number, default: 0 },
+    marginPercent: { type: Number, default: 0, min: 0, max: 100 },
   },
   { timestamps: true }
 );

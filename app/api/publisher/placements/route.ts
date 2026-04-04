@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       url: p.url ?? null,
       primaryGeo: p.primaryGeo ?? "GLOBAL",
       notes: p.notes ?? null,
+      marginPercent: p.marginPercent ?? 0,
       active: p.active ?? true,
       createdAt: p.createdAt ?? null,
       updatedAt: p.updatedAt ?? null,
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
       url,
       primaryGeo = "GLOBAL",
       notes,
+      marginPercent = 0,
     } = body || {};
 
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -90,6 +92,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const clampedMargin = Math.min(100, Math.max(0, Number(marginPercent) || 0));
+
     const placement = await Placement.create({
       publisher: new mongoose.Types.ObjectId(publisherId),
       name: name.trim(),
@@ -98,6 +102,7 @@ export async function POST(req: NextRequest) {
       url: url?.trim() || undefined,
       primaryGeo: primaryGeo?.trim() || "GLOBAL",
       notes: notes?.trim() || undefined,
+      marginPercent: clampedMargin,
       active: true,
     });
 
@@ -113,6 +118,7 @@ export async function POST(req: NextRequest) {
           url: placement.url ?? null,
           primaryGeo: placement.primaryGeo ?? "GLOBAL",
           notes: placement.notes ?? null,
+          marginPercent: placement.marginPercent ?? 0,
           active: placement.active ?? true,
           createdAt: placement.createdAt ?? null,
           updatedAt: placement.updatedAt ?? null,

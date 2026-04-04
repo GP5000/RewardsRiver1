@@ -89,12 +89,15 @@ export async function approveConversion(
     if (conversion) {
       const publisher = await PublisherProfile.findOne({ user: conversion.publisher }).lean() as any;
       if (publisher?.postbackUrl) {
+        // userPayoutUsd = what the user gets credited (after publisher margin).
+        // payoutUsd = full amount credited to publisher wallet.
+        const userPayout = (conversion as any).userPayoutUsd ?? conversion.payoutUsd;
         const url = publisher.postbackUrl
           .replace(/\{sub_id\}/gi, conversion.subId ?? "")
           .replace(/\{user_id\}/gi, conversion.subId ?? "")
           .replace(/\{click_id\}/gi, conversion.clickId ?? "")
-          .replace(/\{payout\}/gi, String(conversion.payoutUsd ?? ""))
-          .replace(/\{amount\}/gi, String(conversion.payoutUsd ?? ""));
+          .replace(/\{payout\}/gi, String(userPayout))
+          .replace(/\{amount\}/gi, String(userPayout));
         await fetch(url, { signal: AbortSignal.timeout(5000) }).catch(() => {});
       }
     }

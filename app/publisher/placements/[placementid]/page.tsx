@@ -23,6 +23,7 @@ type PlacementDetail = {
   url: string | null;
   primaryGeo: string | null;
   notes: string | null;
+  marginPercent: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -64,6 +65,44 @@ function PlacementDetailPageInner() {
   const [days, setDays] = useState<DayOption>(7);
 
   const [copyLabel, setCopyLabel] = useState<"Copy" | "Copied!">("Copy");
+
+  const [marginInput, setMarginInput] = useState<string>("");
+  const [marginSaving, setMarginSaving] = useState(false);
+  const [marginError, setMarginError] = useState<string | null>(null);
+  const [marginSuccess, setMarginSuccess] = useState(false);
+
+  // Sync marginInput when placement loads
+  useEffect(() => {
+    if (placement) setMarginInput(String(placement.marginPercent ?? 0));
+  }, [placement?.id]);
+
+  async function saveMargin() {
+    if (!placementId) return;
+    const val = parseFloat(marginInput);
+    if (isNaN(val) || val < 0 || val > 100) {
+      setMarginError("Enter a value between 0 and 100");
+      return;
+    }
+    setMarginSaving(true);
+    setMarginError(null);
+    setMarginSuccess(false);
+    try {
+      const res = await fetch(`/api/publisher/placements/${placementId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marginPercent: val }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) throw new Error(data.error || "Failed to save");
+      setPlacement((prev: any) => prev ? { ...prev, marginPercent: data.placement.marginPercent } : prev);
+      setMarginSuccess(true);
+      setTimeout(() => setMarginSuccess(false), 3000);
+    } catch (err: any) {
+      setMarginError(err.message || "Failed to save");
+    } finally {
+      setMarginSaving(false);
+    }
+  }
 
   const wallUrl = useMemo(() => {
     if (!placement) return "";
@@ -425,6 +464,53 @@ function PlacementDetailPageInner() {
               <p className="whitespace-pre-wrap">{placement.notes}</p>
             </div>
           )}
+
+          {/* Margin editor */}
+          <div className="mt-4 border-t border-white/10 pt-4">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-sm font-semibold">Publisher Margin</span>
+              <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-medium text-blue-300">
+                {placement.marginPercent ?? 0}% active
+              </span>
+            </div>
+            <p className="mb-3 text-xs text-gray-400">
+              Users see the offer payout reduced by this %. You collect the full amount and keep the difference as profit.
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={marginInput}
+                  onChange={(e) => setMarginInput(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="0"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+              </div>
+              <button
+                type="button"
+                onClick={saveMargin}
+                disabled={marginSaving}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+              >
+                {marginSaving ? "Saving…" : "Save"}
+              </button>
+            </div>
+            {marginError && (
+              <p className="mt-2 text-xs text-red-400">{marginError}</p>
+            )}
+            {marginSuccess && (
+              <p className="mt-2 text-xs text-emerald-400">Margin updated — offers will reflect the new value immediately.</p>
+            )}
+            {Number(marginInput) > 0 && (
+              <p className="mt-2 text-xs text-gray-500">
+                Example: a $100 offer → user sees <span className="text-white font-medium">${(100 * (1 - Number(marginInput) / 100)).toFixed(2)}</span>, you earn <span className="text-emerald-400 font-medium">$100</span>
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Placeholder future chart / logs */}

@@ -15,8 +15,10 @@ export interface IOfferConversion extends Document {
   // UUID matching OfferClick.clickId — unique index enforces idempotency
   clickId?: string;
   subId?: string;
-  // What the publisher earns
+  // What the publisher earns (full amount, credited to publisher wallet)
   payoutUsd: number;
+  // What the user sees / gets credited in the publisher's own platform (after margin)
+  userPayoutUsd?: number;
   // What the advertiser paid (may differ from payoutUsd due to platform fee)
   advertiserPayoutUsd?: number;
   // State machine: pending → approved → paid (or rejected)
@@ -46,6 +48,7 @@ const OfferConversionSchema = new Schema<IOfferConversion>(
     clickId: { type: String },
     subId: { type: String },
     payoutUsd: { type: Number, required: true },
+    userPayoutUsd: { type: Number },
     advertiserPayoutUsd: { type: Number },
     conversionStatus: {
       type: String,

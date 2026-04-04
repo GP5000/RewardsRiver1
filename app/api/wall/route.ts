@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     }
 
     const placement = await Placement.findById(placementId)
-      .select("_id name publisher active")
+      .select("_id name publisher active marginPercent")
       .lean();
 
     if (!placement || placement.active === false) {
@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
     }
 
     const publisherId = placement.publisher.toString();
+    const marginPercent: number = (placement as any).marginPercent ?? 0;
 
     const match: any = {
       status: "active",
@@ -105,21 +106,26 @@ export async function GET(req: NextRequest) {
       return `/api/click?${params.toString()}`;
     };
 
-   const offers = offersRaw.map((o: any) => ({
-  id: o._id.toString(),
-  title: o.title ?? o.name ?? "Untitled Offer",
-  payoutUsd: o.payoutUsd,
-  estMinutes: o.estimatedMinutes ?? null,
-  network: o.network,
-  category: o.category ?? null,
-  description: o.description ?? null,
-  badge: o.badge ?? null,
-  trackingUrl: buildTrackingUrl(
-    o._id.toString(),
-    o.redirectUrl
-  ),
-  imageUrl: o.imageUrl ?? null,
-}));
+   const offers = offersRaw.map((o: any) => {
+  // Apply publisher margin: user sees reduced payout, publisher keeps the difference
+  const fullPayout: number = o.payoutUsd ?? 0;
+  const userPayoutUsd = marginPercent > 0
+    ? Math.round(fullPayout * (1 - marginPercent / 100) * 100) / 100
+    : fullPayout;
+
+  return {
+    id: o._id.toString(),
+    title: o.title ?? o.name ?? "Untitled Offer",
+    payoutUsd: userPayoutUsd,
+    estMinutes: o.estimatedMinutes ?? null,
+    network: o.network,
+    category: o.category ?? null,
+    description: o.description ?? null,
+    badge: o.badge ?? null,
+    trackingUrl: buildTrackingUrl(o._id.toString(), o.redirectUrl),
+    imageUrl: o.imageUrl ?? null,
+  };
+});
 
 
     return NextResponse.json(
