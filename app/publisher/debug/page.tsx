@@ -1,6 +1,8 @@
 // app/publisher/debug/page.tsx
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useEffect, useState } from "react";
 
 type RangeKey = "today" | "7d" | "30d" | "all";
