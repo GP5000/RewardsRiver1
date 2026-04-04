@@ -94,14 +94,17 @@ async function handlePostback(req: NextRequest): Promise<NextResponse> {
     // Try to find linked campaign (for direct advertiser campaigns)
     const campaign = await Campaign.findOne({ offerId: click.offer });
 
-    // Secret validation
-    const expectedSecret = campaign?.postbackSecret ?? GLOBAL_SECRET;
-    if (!secret || secret !== expectedSecret) {
-      postbackLogger.warn(
-        { traceId, clickId, hostname: ip },
-        "Postback rejected: invalid secret"
-      );
-      return new NextResponse("Unauthorized", { status: 401 });
+    // Secret validation — only enforce if a campaign is linked (direct advertiser flow).
+    // Network offers (AdToWall, Torox, etc.) don't send a secret; skip check for those.
+    if (campaign) {
+      const expectedSecret = campaign.postbackSecret ?? GLOBAL_SECRET;
+      if (!secret || secret !== expectedSecret) {
+        postbackLogger.warn(
+          { traceId, clickId, hostname: ip },
+          "Postback rejected: invalid secret"
+        );
+        return new NextResponse("Unauthorized", { status: 401 });
+      }
     }
 
     // Attribution window check

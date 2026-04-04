@@ -11,6 +11,7 @@
 import mongoose from "mongoose";
 import { OfferConversion, ConversionStatus } from "@/server/db/models/OfferConversion";
 import { AuditLog } from "@/server/db/models/AuditLog";
+import { PublisherProfile } from "@/server/db/models/PublisherProfile";
 import { creditWallet } from "./walletService";
 
 const ALLOWED_TRANSITIONS: Record<ConversionStatus, ConversionStatus[]> = {
@@ -80,6 +81,25 @@ export async function approveConversion(
     });
   } finally {
     await session.endSession();
+  }
+
+  // Fire publisher postback URL (best-effort, outside transaction)
+  try {
+    const conversion = await OfferConversion.findById(conversionId).lean();
+    if (conversion) {
+      const publisher = await PublisherProfile.findOne({ user: conversion.publisher }).lean() as any;
+      if (publisher?.postbackUrl) {
+        const url = publisher.postbackUrl
+          .replace(/\{sub_id\}/gi, conversion.subId ?? "")
+          .replace(/\{user_id\}/gi, conversion.subId ?? "")
+          .replace(/\{click_id\}/gi, conversion.clickId ?? "")
+          .replace(/\{payout\}/gi, String(conversion.payoutUsd ?? ""))
+          .replace(/\{amount\}/gi, String(conversion.payoutUsd ?? ""));
+        await fetch(url, { signal: AbortSignal.timeout(5000) }).catch(() => {});
+      }
+    }
+  } catch {
+    // Non-blocking — publisher postback failure does not affect approval
   }
 }
 
