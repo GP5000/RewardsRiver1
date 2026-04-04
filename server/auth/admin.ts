@@ -12,7 +12,7 @@ export async function requireAdmin() {
 
   const user = await User.findById(sessionUser.id)
     .select("role isAdmin")
-    .lean();
+    .lean() as any;
 
   const isAdmin = user && (user.role === "admin" || user.isAdmin === true);
 
