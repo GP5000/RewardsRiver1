@@ -10,12 +10,10 @@ export const fetchCache = "force-no-store";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { placementId: string } }
+  { params }: { params: Promise<{ placementid: string }> }
 ) {
   try {
-    await connectDB();
-
-    const { placementId } = params;
+    const { placementid: placementId } = await params;
 
     if (!placementId || !mongoose.isValidObjectId(placementId)) {
       return NextResponse.json(
