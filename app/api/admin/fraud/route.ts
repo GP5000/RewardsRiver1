@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       if (!ip || typeof ip !== "string") {
         return NextResponse.json({ ok: false, error: "ip is required" }, { status: 400 });
       }
-      await blockIp(ip, userId, reason ?? "Admin block", expiresAt ? new Date(expiresAt) : null);
+      await blockIp(ip, userId, reason ?? "Admin block", expiresAt ? new Date(expiresAt) : undefined);
       return NextResponse.json({ ok: true });
     }
 
