@@ -49,9 +49,13 @@ export async function GET() {
       );
     }
 
-    // Auto-generate apiKey if missing, but NEVER create a new document.
-    if (!publisher.apiKey) {
-      publisher.apiKey = crypto.randomBytes(24).toString("hex");
+    // Auto-generate API key if missing — store only hash + last-8 suffix, never plaintext.
+    let newKeyOnce: string | null = null;
+    if (!publisher.apiKeyHash) {
+      const raw = crypto.randomBytes(24).toString("hex");
+      publisher.apiKeyHash = crypto.createHash("sha256").update(raw).digest("hex");
+      publisher.apiKeySuffix = raw.slice(-8);
+      newKeyOnce = raw; // shown once in response, never stored
       await publisher.save();
     }
 
@@ -61,7 +65,9 @@ export async function GET() {
         settings: {
           name: publisher.name ?? "",
           contactEmail: publisher.contactEmail ?? "",
-          apiKey: publisher.apiKey ?? "",
+          apiKeySuffix: publisher.apiKeySuffix ?? "",
+          // newKey is only present on first generation — null afterwards
+          newKey: newKeyOnce,
           postbackUrl: publisher.postbackUrl ?? "",
           allowedDomains: (publisher.allowedDomains ?? []).join(", "),
           ipWhitelist: (publisher.ipWhitelist ?? []).join(", "),
