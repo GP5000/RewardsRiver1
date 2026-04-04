@@ -11,18 +11,19 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
     const { advertiserId } = await requireAdvertiser();
 
-    if (!mongoose.isValidObjectId(params.id)) {
+    if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json({ ok: false, error: "Invalid campaign ID" }, { status: 400 });
     }
 
     const campaign = await Campaign.findOne({
-      _id: params.id,
+      _id: id,
       advertiser: advertiserId,
     }).lean();
 
@@ -74,18 +75,19 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
     const { advertiserId } = await requireAdvertiser();
 
-    if (!mongoose.isValidObjectId(params.id)) {
+    if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json({ ok: false, error: "Invalid campaign ID" }, { status: 400 });
     }
 
     const campaign = await Campaign.findOne({
-      _id: params.id,
+      _id: id,
       advertiser: advertiserId,
     });
 
@@ -99,13 +101,13 @@ export async function PUT(
     // Handle state machine actions
     if (action === "pause") {
       const actorId = new mongoose.Types.ObjectId(advertiserId);
-      await pauseCampaign(params.id, actorId, "advertiser");
+      await pauseCampaign(id, actorId, "advertiser");
       return NextResponse.json({ ok: true, status: "paused" });
     }
 
     if (action === "resume") {
       const actorId = new mongoose.Types.ObjectId(advertiserId);
-      await resumeCampaign(params.id, actorId, "advertiser");
+      await resumeCampaign(id, actorId, "advertiser");
       return NextResponse.json({ ok: true, status: "active" });
     }
 

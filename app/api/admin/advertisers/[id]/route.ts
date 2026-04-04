@@ -12,13 +12,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
     await requireAdmin();
 
-    const advertiser = await AdvertiserProfile.findById(params.id)
+    const advertiser = await AdvertiserProfile.findById(id)
       .populate("user", "name email createdAt")
       .lean();
 
@@ -26,7 +27,7 @@ export async function GET(
       return NextResponse.json({ ok: false, error: "Advertiser not found" }, { status: 404 });
     }
 
-    const advertiserObjectId = new mongoose.Types.ObjectId(params.id);
+    const advertiserObjectId = new mongoose.Types.ObjectId(id);
 
     const [campaigns, wallet] = await Promise.all([
       Campaign.find({ advertiser: advertiserObjectId })
@@ -79,9 +80,10 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
     const { userId } = await requireAdmin();
 
@@ -90,7 +92,7 @@ export async function PUT(
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? undefined;
     const actorId = new mongoose.Types.ObjectId(userId);
 
-    const advertiser = await AdvertiserProfile.findById(params.id);
+    const advertiser = await AdvertiserProfile.findById(id);
     if (!advertiser) {
       return NextResponse.json({ ok: false, error: "Advertiser not found" }, { status: 404 });
     }

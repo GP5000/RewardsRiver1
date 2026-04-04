@@ -10,13 +10,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
     await requireAdmin();
 
-    const campaign = await Campaign.findById(params.id)
+    const campaign = await Campaign.findById(id)
       .populate("advertiser", "companyName contactEmail websiteUrl")
       .lean();
 
@@ -63,9 +64,10 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
     const { userId } = await requireAdmin();
 
@@ -75,12 +77,12 @@ export async function PUT(
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? undefined;
 
     if (action === "approve") {
-      const offerId = await approveCampaign(params.id, actorId, ip);
+      const offerId = await approveCampaign(id, actorId, ip);
       return NextResponse.json({ ok: true, offerId });
     }
 
     if (action === "reject") {
-      const campaign = await Campaign.findById(params.id);
+      const campaign = await Campaign.findById(id);
       if (!campaign) {
         return NextResponse.json({ ok: false, error: "Campaign not found" }, { status: 404 });
       }

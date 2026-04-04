@@ -9,9 +9,10 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
     const { userId } = await requireAdmin();
 
@@ -28,9 +29,9 @@ export async function PATCH(
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? undefined;
 
     if (action === "approve") {
-      await approveConversion(params.id, actorId, ip);
+      await approveConversion(id, actorId, ip);
     } else {
-      await rejectConversion(params.id, actorId, reason, ip);
+      await rejectConversion(id, actorId, reason, ip);
     }
 
     return NextResponse.json({ ok: true });
