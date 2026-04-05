@@ -336,6 +336,20 @@ if (placementsRes.ok) {
                   <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-300/70">
                     Earnings summary
                   </p>
+                  {overview?.publisher?.id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(overview.publisher.id);
+                        setToast({ message: "Publisher ID copied", type: "success" });
+                      }}
+                      className="mt-0.5 flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-gray-300 transition"
+                      title="Copy publisher ID"
+                    >
+                      <span className="font-mono">ID: {overview.publisher.id}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    </button>
+                  )}
                   <p className="mt-1 text-3xl font-semibold text-white">
                     $
                     {(last7d?.revenueUsd ?? 0).toFixed(2)}
