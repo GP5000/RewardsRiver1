@@ -149,7 +149,9 @@ export async function GET(req: NextRequest) {
       .replace(/\[clickid\]/gi, clickId)
       .replace(/%%CLICK_ID%%/g, clickId)
       .replace(/\{transaction_id\}/gi, clickId)
-      .replace(/\[transaction_id\]/gi, clickId);
+      .replace(/\[transaction_id\]/gi, clickId)
+      .replace(/\[S1\]/g, clickId)
+      .replace(/\{S1\}/g, clickId);
 
     // Set rr_cid cookie (30 days) so the wall page can retrieve it for postback matching
     const response = NextResponse.redirect(finalRedirect, { status: 302 });
