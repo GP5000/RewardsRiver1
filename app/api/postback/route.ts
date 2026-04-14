@@ -63,8 +63,8 @@ async function handlePostback(req: NextRequest): Promise<NextResponse> {
       params = new URL(req.url).searchParams;
     }
 
-    const clickId = params.get("click_id") ?? params.get("clickid");
-    const amountStr = params.get("amount") ?? params.get("payout");
+    const clickId = params.get("click_id") ?? params.get("clickid") ?? params.get("user_id") ?? params.get("uid");
+    const amountStr = params.get("amount") ?? params.get("payout") ?? params.get("payout_usd");
     const secret = params.get("secret") ?? params.get("token");
 
     if (!clickId) {
