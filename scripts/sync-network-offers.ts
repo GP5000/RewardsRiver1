@@ -8,7 +8,8 @@
  *
  * Env vars required:
  *   MONGODB_URI
- *   ADTOWALL_APP_ID   (from AdToWall publisher dashboard)
+ *   ADTOWALL_AFFILIATE_ID  (from AdToWall publisher dashboard)
+ *   ADTOWALL_API_KEY       (from AdToWall publisher dashboard)
  */
 
 import "dotenv/config";
@@ -83,10 +84,11 @@ interface OfferImport {
    ───────────────────────────────────────────────────────────── */
 
 async function fetchAdToWall(): Promise<OfferImport[]> {
-  const appId = process.env.ADTOWALL_APP_ID;
-  if (!appId) throw new Error("ADTOWALL_APP_ID env var not set");
+  const affiliateId = process.env.ADTOWALL_AFFILIATE_ID;
+  const apiKey = process.env.ADTOWALL_API_KEY;
+  if (!affiliateId || !apiKey) throw new Error("ADTOWALL_AFFILIATE_ID and ADTOWALL_API_KEY must be set");
 
-  const url = `https://adtowall.com/api/v1/offers?app_id=${appId}`;
+  const url = `https://adtowall.com/api/v1/offers?affiliate_id=${affiliateId}&api_key=${apiKey}`;
   console.log(`  Fetching ${url}`);
 
   const res = await fetch(url, {
@@ -111,7 +113,7 @@ async function fetchAdToWall(): Promise<OfferImport[]> {
   return raw.map((o: any): OfferImport => {
     // AdToWall tracking link — they use uid for the click/subid param
     // We store {click_id} which our click route substitutes with the UUID
-    const trackingUrl = buildAdToWallUrl(appId, o);
+    const trackingUrl = buildAdToWallUrl(affiliateId, o);
 
     // Normalize device target
     let deviceTarget: "all" | "desktop" | "mobile" = "all";
@@ -155,7 +157,7 @@ async function fetchAdToWall(): Promise<OfferImport[]> {
  * AdToWall tracking links use &uid= for the subid / click_id.
  * We store {click_id} which the click route replaces with the UUID at click time.
  */
-function buildAdToWallUrl(appId: string, offer: any): string {
+function buildAdToWallUrl(affiliateId: string, offer: any): string {
   // If AdToWall gives us a pre-built click URL, normalise it
   if (offer.tracking_url ?? offer.click_url ?? offer.url) {
     const raw: string = offer.tracking_url ?? offer.click_url ?? offer.url;
@@ -171,7 +173,7 @@ function buildAdToWallUrl(appId: string, offer: any): string {
 
   // Fallback: build the standard AdToWall click URL manually
   const offerId = offer.id ?? offer.offer_id;
-  return `https://adtowall.com/click?app_id=${appId}&offer_id=${offerId}&uid={click_id}`;
+  return `https://adtowall.com/click?affiliate_id=${affiliateId}&offer_id=${offerId}&uid={click_id}`;
 }
 
 /* ─────────────────────────────────────────────────────────────

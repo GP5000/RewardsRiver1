@@ -20,7 +20,7 @@ async function requireAdmin() {
 
 /* ─── AdToWall fetcher ─── */
 
-function buildAdToWallUrl(appId: string, o: any): string {
+function buildAdToWallUrl(affiliateId: string, o: any): string {
   if (o.tracking_url ?? o.click_url ?? o.url) {
     const raw: string = o.tracking_url ?? o.click_url ?? o.url;
     return raw
@@ -32,14 +32,16 @@ function buildAdToWallUrl(appId: string, o: any): string {
       .replace(/\[user_id\]/gi, "{click_id}");
   }
   const offerId = o.id ?? o.offer_id;
-  return `https://adtowall.com/click?app_id=${appId}&offer_id=${offerId}&uid={click_id}`;
+  return `https://adtowall.com/click?affiliate_id=${affiliateId}&offer_id=${offerId}&uid={click_id}`;
 }
 
 async function fetchAdToWall(): Promise<any[]> {
-  const appId = process.env.ADTOWALL_APP_ID;
-  if (!appId) throw new Error("ADTOWALL_APP_ID is not configured");
+  const affiliateId = process.env.ADTOWALL_AFFILIATE_ID;
+  const apiKey = process.env.ADTOWALL_API_KEY;
+  if (!affiliateId || !apiKey) throw new Error("ADTOWALL_AFFILIATE_ID and ADTOWALL_API_KEY must be set");
 
-  const res = await fetch(`https://adtowall.com/api/v1/offers?app_id=${appId}`, {
+  const url = `https://adtowall.com/api/v1/offers?affiliate_id=${affiliateId}&api_key=${apiKey}`;
+  const res = await fetch(url, {
     headers: { Accept: "application/json" },
     next: { revalidate: 0 },
   });
@@ -70,7 +72,7 @@ async function fetchAdToWall(): Promise<any[]> {
       name: o.name ?? o.title ?? "Untitled",
       title: o.name ?? o.title ?? "Untitled",
       description: o.description ?? "",
-      redirectUrl: buildAdToWallUrl(appId, o),
+      redirectUrl: buildAdToWallUrl(affiliateId, o),
       payoutUsd: parseFloat(o.payout ?? o.revenue ?? 0),
       category: o.category ?? o.type ?? null,
       imageUrl: o.image_url ?? o.icon ?? o.thumbnail ?? null,
