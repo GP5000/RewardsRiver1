@@ -9,6 +9,7 @@ import { useState } from "react";
 
 const ADMIN_LINKS = [
   { href: "/admin/offers", label: "Offers" },
+  { href: "/admin/offers/import", label: "Import Offers" },
   { href: "/admin/campaigns", label: "Campaigns" },
   { href: "/admin/conversions", label: "Conversions" },
   { href: "/admin/placements", label: "Placements" },
@@ -50,7 +51,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
   const NavList = (
     <nav className="mt-4 space-y-1 text-sm">
       {ADMIN_LINKS.map((item) => {
-        const exactMatch = ["/admin/offers", "/admin/placements", "/admin/conversions", "/admin/analytics", "/admin/fraud", "/admin/settings"];
+        const exactMatch = ["/admin/offers", "/admin/offers/import", "/admin/placements", "/admin/conversions", "/admin/analytics", "/admin/fraud", "/admin/settings"];
         const active =
           pathname === item.href ||
           (!exactMatch.includes(item.href) && pathname?.startsWith(item.href + "/"));
